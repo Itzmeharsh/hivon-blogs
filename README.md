@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hivon Blogs – AI Powered Blogging Platform
 
-## Getting Started
+## 🚀 Overview
 
-First, run the development server:
+This project is a full-stack blogging platform built using Next.js and Supabase. It supports role-based access and integrates Google Gemini AI to generate summaries for blog posts automatically.
 
-```bash
+---
+
+## 🛠 Tech Stack
+
+* Frontend & Backend: Next.js (App Router)
+* Database: Supabase
+* Authentication: Supabase Auth
+* AI Integration: Google Gemini API
+* Styling: Tailwind CSS
+* Deployment: Vercel
+
+---
+
+## 👥 User Roles
+
+* Viewer: Can read posts and add comments
+* Author: Can create and edit their own posts
+* Admin: Can edit all posts and monitor comments
+
+---
+
+## ✨ Features
+
+* User authentication (login/signup)
+* Role-based access control
+* Create blog posts with AI-generated summaries
+* Search functionality
+* Pagination
+* Comment system
+* Responsive UI
+
+---
+
+## 🤖 AI Integration
+
+* When a post is created, content is sent to Gemini API
+* A ~200-word summary is generated
+* Summary is stored in the database
+* Displayed on the homepage
+
+---
+
+## 💰 Cost Optimization
+
+* Summary is generated only once during post creation
+* Stored in database to avoid repeated API calls
+* Reduces token usage and cost
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone repo
+
+git clone <your-repo-link>
+
+### 2. Install dependencies
+
+npm install
+
+### 3. Add environment variables
+
+Create `.env.local`:
+
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+GOOGLE_API_KEY=your_google_key
+
+### 4. Run project
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🌐 Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Deployed using Vercel with environment variables configured.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🧠 Learnings
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* Handling Supabase authentication and roles
+* Secure API integration using server-side routes
+* Managing environment variables safely
+* Implementing full-stack features with clean architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
