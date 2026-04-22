@@ -7,6 +7,8 @@ export default function Home() {
   const [posts, setPosts] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
+  const [role, setRole] = useState('');
+  const [user, setUser] = useState<any>(null);
 
   const PAGE_SIZE = 5;
 
@@ -25,23 +27,91 @@ export default function Home() {
     setPosts(data || []);
   };
 
+  // 🔐 Get user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    getUser();
+  }, []);
+
+  // 📄 Fetch posts
   useEffect(() => {
     fetchPosts();
   }, [query, page]);
 
-  // 💬 Add Comment
+  // 🔐 Get role
+  useEffect(() => {
+    const getRole = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session.session?.user.id;
 
+      if (!userId) return;
+
+      const { data } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      setRole(data?.role);
+    };
+
+    getRole();
+  }, []);
+
+  // 🚪 Logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
 
   return (
     <div className="p-10">
+
+      {/* 🔐 Auth UI */}
+      <div className="flex justify-end gap-3 mb-4">
+        {user ? (
+          <>
+            <span className="text-sm">{user.email}</span>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-3 py-1"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <a href="/auth/login" className="bg-blue-500 text-white px-3 py-1">
+              Login
+            </a>
+            <a href="/auth/signup" className="bg-green-500 text-white px-3 py-1">
+              Signup
+            </a>
+          </>
+        )}
+      </div>
+
       <h1 className="text-2xl mb-4">All Posts</h1>
+
+      {/* ✍️ Create Post */}
+      {(role === 'author' || role === 'admin') && (
+        <a
+          href="/create-post"
+          className="bg-blue-500 text-white px-4 py-2 mb-4 inline-block"
+        >
+          + Create Post
+        </a>
+      )}
 
       {/* 🔍 Search */}
       <input
         placeholder="Search posts..."
         onChange={(e) => {
           setQuery(e.target.value);
-          setPage(0); // reset page on search
+          setPage(0);
         }}
         className="border p-2 mb-4 w-full"
       />
@@ -49,10 +119,30 @@ export default function Home() {
       {/* 📄 Posts */}
       {posts.map((post) => (
         <div key={post.id} className="border p-4 mb-4">
+
           <h2 className="text-lg font-bold">{post.title}</h2>
+
+          {/* 🖼️ Image */}
+          {post.image_url && (
+            <img
+              src={post.image_url}
+              alt="post"
+              className="w-full h-48 object-cover mt-2"
+            />
+          )}
+
           <p className="text-gray-500 mt-2">{post.summary}</p>
 
-          {/* 💬 Comment Button */}
+          {/* ✏️ Edit Button */}
+          {(role === 'admin' || post.author_id === user?.id) && (
+            <a
+              href={`/edit-post/${post.id}`}
+              className="bg-yellow-500 text-white px-2 py-1 mt-2 inline-block"
+            >
+              Edit
+            </a>
+          )}
+
           <CommentSection postId={post.id} />
         </div>
       ))}
@@ -76,6 +166,7 @@ export default function Home() {
     </div>
   );
 }
+
 function CommentSection({ postId }: { postId: string }) {
   const [comments, setComments] = useState<any[]>([]);
   const [text, setText] = useState('');
@@ -118,7 +209,6 @@ function CommentSection({ postId }: { postId: string }) {
     <div className="mt-4">
       <h3 className="font-semibold">Comments</h3>
 
-      {/* Input */}
       <div className="flex gap-2 mt-2">
         <input
           value={text}
@@ -134,7 +224,6 @@ function CommentSection({ postId }: { postId: string }) {
         </button>
       </div>
 
-      {/* Comments list */}
       <div className="mt-2">
         {comments.map((c) => (
           <div key={c.id} className="text-sm border-b py-1">

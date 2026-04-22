@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 export default function CreatePost() {
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
+    const [image, setImage] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
@@ -26,7 +27,7 @@ export default function CreatePost() {
             return;
         }
 
-        // 🔐 Get user role from DB
+        // 🔐 Get user role
         const { data: userData } = await supabase
             .from('users')
             .select('*')
@@ -34,13 +35,45 @@ export default function CreatePost() {
             .single();
 
         if (userData.role !== 'author' && userData.role !== 'admin') {
-            alert("Access denied: Only authors/admins can create posts");
+            alert("Access denied");
             setLoading(false);
             return;
         }
 
         try {
-            // 🤖 Generate AI summary (server API)
+            // 🖼️ Upload Image
+            let imageUrl = null;
+
+            if (image) {
+                // ✅ Clean filename (fix 400 error)
+                const cleanName = image.name
+                    .replace(/\s+/g, '-')
+                    .replace(/[()]/g, '');
+
+                const fileName = `${Date.now()}-${cleanName}`;
+
+                const { error } = await supabase.storage
+                    .from('blog-images')
+                    .upload(fileName, image, {
+                        cacheControl: '3600',
+                        upsert: false,
+                    });
+
+                if (error) {
+                    console.error(error);
+                    alert(error.message);
+                    setLoading(false);
+                    return;
+                }
+
+                const { data } = supabase.storage
+                    .from('blog-images')
+                    .getPublicUrl(fileName);
+
+                imageUrl = data.publicUrl;
+            }
+
+            // 🤖 Generate AI summary
             const res = await fetch('/api/generate-summary', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -59,6 +92,7 @@ export default function CreatePost() {
                 body,
                 summary: data.summary,
                 author_id: user.id,
+                image_url: imageUrl,
             });
 
             if (error) throw error;
@@ -68,6 +102,8 @@ export default function CreatePost() {
             // 🔄 Reset form
             setTitle('');
             setBody('');
+            setImage(null);
+
         } catch (err: any) {
             alert(err.message || "Something went wrong");
         }
@@ -83,6 +119,13 @@ export default function CreatePost() {
                 value={title}
                 placeholder="Title"
                 onChange={(e) => setTitle(e.target.value)}
+                className="border p-2 mb-3 w-full"
+            />
+
+            {/* 🖼️ Image Upload */}
+            <input
+                type="file"
+                onChange={(e) => setImage(e.target.files?.[0] || null)}
                 className="border p-2 mb-3 w-full"
             />
 
